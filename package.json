@@ -11,9 +11,7 @@
   },
   "engines": {
     "node": "18.x"
-  }
-}
-,
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
     "lucide-react": "^0.344.0",
