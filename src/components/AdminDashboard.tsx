@@ -127,9 +127,10 @@ const loadLeaderboards = async () => {
     setSelectedLeaderboard(newLeaderboards[0] || null);
   };
 
-  const handleSaveRound = async (roundData: Omit<InterviewRound, 'id' | 'leaderboard_id' | 'created_at' | 'updated_at'>) => {
-    if (!selectedLeaderboard) return;
+ const handleSaveRound = async (roundData: Omit<InterviewRound, 'id' | 'leaderboard_id' | 'created_at' | 'updated_at'>) => {
+  if (!selectedLeaderboard) return;
 
+  try {
     const { data, error } = await supabase
       .from('interview_rounds')
       .insert({
@@ -141,15 +142,25 @@ const loadLeaderboards = async () => {
 
     if (error) {
       console.error('Error saving interview round:', error);
-      alert(`Failed to save interview round: ${error.message}`);
+      alert(`Failed to save interview round: ${error.message || JSON.stringify(error)}`);
       return;
     }
 
     if (data) {
-      setRounds([...rounds, data]);
+      // Option A: re-load rounds from server to ensure consistency:
+      await loadRounds(selectedLeaderboard.id);
+
+      // Option B (fast): setRounds(prev => [data, ...prev]);
+      // setRounds(prev => [data, ...prev]);
+
       setShowRoundForm(false);
     }
-  };
+  } catch (err: any) {
+    console.error('Unhandled save error:', err);
+    alert('An unexpected error occurred while saving. See console.');
+  }
+};
+
 
   const handleDeleteRound = async (roundId: string) => {
     await supabase.from('interview_rounds').delete().eq('id', roundId);
