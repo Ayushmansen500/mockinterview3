@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: mockinterview2
+    name: mockinterview3
     runtime: node
     runtimeVersion: 18
     branch: main
