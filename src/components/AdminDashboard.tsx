@@ -62,13 +62,15 @@ export function AdminDashboard({ hideHeader = false }: AdminDashboardProps) {
     }
   }, [rounds]);
 
-  const loadLeaderboards = async () => {
-    setLoading(false);
-
-    const { data } = await supabase
+const loadLeaderboards = async () => {
+  setLoading(true);
+  try {
+    const { data, error } = await supabase
       .from('leaderboards')
       .select('*')
       .order('created_at', { ascending: false });
+
+    if (error) throw error;
 
     if (data) {
       setLeaderboards(data);
@@ -76,7 +78,14 @@ export function AdminDashboard({ hideHeader = false }: AdminDashboardProps) {
         setSelectedLeaderboard(data[0]);
       }
     }
-  };
+  } catch (err: any) {
+    console.error('loadLeaderboards error:', err);
+    // show minimal user feedback
+    alert('Failed to load leaderboards. Check console.');
+  } finally {
+    setLoading(false);
+  }
+};
 
   const loadRounds = async (leaderboardId: string) => {
     const { data } = await supabase
