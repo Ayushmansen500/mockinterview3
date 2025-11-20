@@ -2,20 +2,22 @@ import { useState } from 'react';
 import { X, Save } from 'lucide-react';
 import type { Database } from '../lib/database.types';
 
-type InterviewRound = Database['public']['Tables']['interview_rounds']['Row'];
+type InterviewRoundInsert = Database['public']['Tables']['interview_rounds']['Insert'];
 
 interface InterviewRoundFormProps {
   leaderboardId: string;
-  onSave: (round: Omit<InterviewRound, 'id' | 'leaderboard_id' | 'created_at' | 'updated_at'>) => void;
+  onSave: (round: InterviewRoundInsert) => void;
   onClose: () => void;
 }
 
 export function InterviewRoundForm({ leaderboardId, onSave, onClose }: InterviewRoundFormProps) {
+  const today = new Date().toISOString().split('T')[0];
+
   const [formData, setFormData] = useState({
     student_name: '',
     round_number: 1,
     score: 5,
-    interview_date: new Date().toISOString().split('T')[0],
+    interview_date: today,
     interviewer_name: '',
     strengths: '',
     weaknesses: '',
@@ -23,18 +25,32 @@ export function InterviewRoundForm({ leaderboardId, onSave, onClose }: Interview
     notes: '',
   });
 
+  const updateField = (field: string, value: string | number) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!formData.student_name.trim() || !formData.interviewer_name.trim()) {
       alert('Please fill in all required fields');
       return;
     }
 
-    onSave(formData);
-  };
+    const payload: InterviewRoundInsert = {
+      leaderboard_id: leaderboardId,
+      student_name: formData.student_name.trim(),
+      round_number: formData.round_number,
+      score: formData.score,
+      interview_date: formData.interview_date,
+      interviewer_name: formData.interviewer_name.trim(),
+      strengths: formData.strengths || null,
+      weaknesses: formData.weaknesses || null,
+      feedback: formData.feedback || null,
+      notes: formData.notes || null,
+    };
 
-  const updateField = (field: string, value: string | number) => {
-    setFormData({ ...formData, [field]: value });
+    onSave(payload);
   };
 
   return (
@@ -43,10 +59,9 @@ export function InterviewRoundForm({ leaderboardId, onSave, onClose }: Interview
         className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* HEADER */}
         <div className="sticky top-0 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-6 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-            Record Interview Round
-          </h2>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Record Interview Round</h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
@@ -55,7 +70,9 @@ export function InterviewRoundForm({ leaderboardId, onSave, onClose }: Interview
           </button>
         </div>
 
+        {/* FORM */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {/* Name + Round */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
@@ -66,8 +83,7 @@ export function InterviewRoundForm({ leaderboardId, onSave, onClose }: Interview
                 required
                 value={formData.student_name}
                 onChange={(e) => updateField('student_name', e.target.value)}
-                className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="John Doe"
+                className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
@@ -78,7 +94,7 @@ export function InterviewRoundForm({ leaderboardId, onSave, onClose }: Interview
               <select
                 value={formData.round_number}
                 onChange={(e) => updateField('round_number', parseInt(e.target.value))}
-                className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500"
               >
                 {[1, 2, 3, 4, 5].map(n => (
                   <option key={n} value={n}>Round {n}</option>
@@ -87,20 +103,21 @@ export function InterviewRoundForm({ leaderboardId, onSave, onClose }: Interview
             </div>
           </div>
 
+          {/* Score + Date + Interviewer */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {/* SCORE */}
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                Score (0-10) *
+                Score (0–10) *
               </label>
               <div className="flex items-center gap-2">
                 <input
                   type="range"
                   min="0"
                   max="10"
-                  step="1"
                   value={formData.score}
                   onChange={(e) => updateField('score', parseInt(e.target.value))}
-                  className="flex-1 h-2 bg-slate-300 dark:bg-slate-600 rounded-lg appearance-none cursor-pointer"
+                  className="flex-1 h-2 bg-slate-300 dark:bg-slate-600 rounded-lg cursor-pointer"
                 />
                 <span className="text-lg font-bold text-slate-900 dark:text-white w-12 text-center">
                   {formData.score}
@@ -108,6 +125,7 @@ export function InterviewRoundForm({ leaderboardId, onSave, onClose }: Interview
               </div>
             </div>
 
+            {/* DATE */}
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 Interview Date *
@@ -117,10 +135,11 @@ export function InterviewRoundForm({ leaderboardId, onSave, onClose }: Interview
                 required
                 value={formData.interview_date}
                 onChange={(e) => updateField('interview_date', e.target.value)}
-                className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
+            {/* INTERVIEWER */}
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 Interviewer Name *
@@ -130,12 +149,12 @@ export function InterviewRoundForm({ leaderboardId, onSave, onClose }: Interview
                 required
                 value={formData.interviewer_name}
                 onChange={(e) => updateField('interviewer_name', e.target.value)}
-                className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Jane Smith"
+                className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
 
+          {/* Feedback */}
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
               Feedback
@@ -144,11 +163,11 @@ export function InterviewRoundForm({ leaderboardId, onSave, onClose }: Interview
               rows={3}
               value={formData.feedback}
               onChange={(e) => updateField('feedback', e.target.value)}
-              className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-              placeholder="Overall feedback for this round..."
+              className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 resize-none"
             />
           </div>
 
+          {/* Strengths + Weaknesses */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
@@ -158,8 +177,7 @@ export function InterviewRoundForm({ leaderboardId, onSave, onClose }: Interview
                 rows={2}
                 value={formData.strengths}
                 onChange={(e) => updateField('strengths', e.target.value)}
-                className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                placeholder="What did the student do well?"
+                className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white resize-none"
               />
             </div>
 
@@ -171,12 +189,12 @@ export function InterviewRoundForm({ leaderboardId, onSave, onClose }: Interview
                 rows={2}
                 value={formData.weaknesses}
                 onChange={(e) => updateField('weaknesses', e.target.value)}
-                className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                placeholder="What could be improved?"
+                className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white resize-none"
               />
             </div>
           </div>
 
+          {/* Notes */}
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
               Additional Notes
@@ -185,11 +203,11 @@ export function InterviewRoundForm({ leaderboardId, onSave, onClose }: Interview
               rows={2}
               value={formData.notes}
               onChange={(e) => updateField('notes', e.target.value)}
-              className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-              placeholder="Any other comments..."
+              className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white resize-none"
             />
           </div>
 
+          {/* SAVE + CANCEL */}
           <div className="flex gap-3 pt-4">
             <button
               type="submit"
@@ -198,10 +216,11 @@ export function InterviewRoundForm({ leaderboardId, onSave, onClose }: Interview
               <Save className="w-5 h-5" />
               Record Interview
             </button>
+
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-3 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-medium rounded-lg transition-colors"
+              className="px-4 py-3 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg"
             >
               Cancel
             </button>
