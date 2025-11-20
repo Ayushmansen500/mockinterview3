@@ -26,12 +26,20 @@ export function StudentRoundsModal({
     return 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20';
   };
 
+  const safeDate = (d: string | null) => {
+    if (!d) return "No date";
+    const parsed = new Date(d);
+    if (isNaN(parsed.getTime())) return "Invalid date";
+    return parsed.toLocaleDateString();
+  };
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={onClose}>
       <div
         className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* HEADER */}
         <div className="sticky top-0 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-6 flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
@@ -49,7 +57,9 @@ export function StudentRoundsModal({
           </button>
         </div>
 
+        {/* BODY */}
         <div className="p-6 space-y-6">
+          {/* STAT CARDS */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
               <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">Highest Score</p>
@@ -80,6 +90,7 @@ export function StudentRoundsModal({
             </div>
           </div>
 
+          {/* ROUND DETAILS */}
           <div>
             <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
               <TrendingUp className="w-5 h-5" />
@@ -92,7 +103,7 @@ export function StudentRoundsModal({
               ) : (
                 rounds
                   .sort((a, b) => a.round_number - b.round_number)
-                  .map((round, idx) => (
+                  .map((round) => (
                     <div
                       key={round.id}
                       className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg border border-slate-200 dark:border-slate-600"
@@ -107,8 +118,9 @@ export function StudentRoundsModal({
                               {round.score}/10
                             </span>
                           </div>
+
                           <p className="text-xs text-slate-500 dark:text-slate-400">
-                            {new Date(round.interview_date).toLocaleDateString()} • {round.interviewer_name}
+                            {safeDate(round.interview_date)} • {round.interviewer_name || "Unknown"}
                           </p>
                         </div>
 
