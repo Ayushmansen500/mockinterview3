@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: mockinterview2
+    runtime: node
+    runtimeVersion: 18
+    branch: main
+    buildCommand: npm install && npm run build
+    startCommand: npm run preview
+    envVars:
+      - key: VITE_SUPABASE_URL
+        value: https://oxlrzqdtnabjewelgyjr.supabase.co
+      - key: VITE_SUPABASE_ANON_KEY
+        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im94bHJ6cWR0bmFiamV3ZWxneWpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMwMTYyNTAsImV4cCI6MjA3ODU5MjI1MH0.j7xPIlOmgD7N9-ig4CYHCVrtxRD89qlp1APXcK94DHk
